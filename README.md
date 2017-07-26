@@ -19,3 +19,5 @@ optional arguments:
                         file to save missing (failed) movies
   -t THREADS, --threads THREADS
                         how much threads should be used (default: 4)
+
+![Image](https://github.com/twoDarkMessiah/py_moviecrawler/blob/master/py_moviecrawler.png?raw=true)
