@@ -1,7 +1,7 @@
 # py_moviecrawler
 Simple multithreaded python movie crawler
 
-Disclaimer: I'm not responsable for the use of this software. Check if the downloading of movies is in accordance with the laws of your country!
+Disclaimer: I'm not responsable for the use of this software. Check if downloading of movies is in accordance with the laws of your country!
 
 Description:
 Search for filecrypt links (ul, so) for movies. Filtered by 1080p.
