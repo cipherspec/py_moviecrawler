@@ -1,6 +1,6 @@
 #Author: twoDarkMessiah (twoDarkMessiah@gmail.com)
-#Version: 0.1.0
-#Date: 2017-07-26 23:50
+#Version: 0.1.1
+#Date: 2017-07-28 17.20
 #License: GPL 3
 
 import urllib
@@ -8,8 +8,9 @@ import re
 import argparse
 import multiprocessing as mp
 from urllib import request
-from urllib.parse import urlencode
+from urllib import parse
 import os
+from pip._vendor import requests
 
 def findLink(movie):
     print("Searching for: " + movie.strip())
@@ -27,14 +28,23 @@ def findLink(movie):
             release = re.findall('<h4 class="news-teaser__headline">.{0,999}</h4>', line)[0]
             release.strip()
             release = release[34:-5]
-            if "1080p" in line and "XXX" not in line:
+            tvshow = len(re.findall('S\d{2}', release))
+            if "1080p" in release and "XXX" not in release and tvshow == 0:
                 ffound = 1
         if ffound == 1 and ('Uploaded.net' in line or 'Share-Online.biz' in line) and 'filecrypt.cc' in line:
             link = re.findall('http.{1,99}html', line.replace("\n", " "))[0]
             print("Found link for '" + release + "': " + link)
             return (link, movie)
-        lnum = lnum + 1
     return (None, movie)
+
+def moviedbsearch(title):
+    url = "https://api.themoviedb.org/3/search/tv"
+    payload = {'api_key': "<YOUR_API_KEY>", 'langauge': "de-DE", 'query': title}
+    data = urllib.parse.urlencode(payload)
+    data = data.encode('ascii')
+    req = urllib.request.Request(url, data)
+    res = urllib.request.urlopen(req)
+    print (res.read())
 
 def main():
     movies = []
@@ -56,13 +66,17 @@ def main():
         return
 
     for line in open(args.file, 'r', encoding="utf-8"):
-        movies.append(line)
+        if(len(line.strip()) >= 4):
+            movies.append(line)
 
     print (str(len(movies)) + " movies in list")
-    print ("using " + args.threads + " threads")
+    print ("Using " + args.threads + " threads")
+    if int(args.threads) > 8:
+        print("Warning: more than 8 threads can lead to random crashes")
 
-    pool = mp.Pool(processes=int(args.threads))
+    pool = mp.Pool(processes=int(args.threads), maxtasksperchild=1)
     results = pool.map(findLink, movies);
+    pool.close()
 
     if (len(movies) > 0):
         if (not (args.output == None)):
@@ -75,12 +89,11 @@ def main():
         if(result[0] != None):
             movies_found.append(result[1])
             if(file_out != None):
-                file_out.write(result[0] + "\r\n")
+                file_out.write(result[0].strip() + "\r\n")
         else:
             movies_missing.append(result[1])
             if(fh_missing != None):
-                fh_missing.write(result[1] + "\r\n")
-        print (result[0])
+                fh_missing.write(result[1].strip() + "\r\n")
 
     if(file_out != None):
         file_out.close()
