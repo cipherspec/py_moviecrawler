@@ -1,6 +1,6 @@
 #Author: twoDarkMessiah (twoDarkMessiah@gmail.com)
-#Version: 0.2.0
-#Date: 2017-07-29 0:15
+#Version: 0.3.0
+#Date: 2017-07-30 21:45
 #License: GPL 3
 
 import urllib
@@ -11,10 +11,18 @@ from urllib import request
 from urllib import parse
 import os
 import lxml.html
+import xml.etree.ElementTree as xml
 from pip._vendor import requests
 
 #set allowed OCHs
 allowed_hoster = ["Uploaded.net", "Share-online.biz"]
+
+#Your Plex Data
+#Finding Auth Token: https://support.plex.tv/hc/en-us/articles/204059436-Finding-an-authentication-token-X-Plex-Token
+plex_url = "http://plex.example.com:32401"
+plex_auth_token = "<YOUR-PLEX-TOKEN>"
+plex_library_id = 2 #Your Movie Library
+plex_use = False #True, to compare movielist with plex
 
 def findLink(movie):
     print("Searching for: " + movie.strip())
@@ -52,7 +60,7 @@ def findLink(movie):
                      links.append((child.get("title"), child.get("href")))
                  if(child.tag == "a" and child.get("title") == "Warezkorb" and child.get("href") != None):
                      tmp_info_link = child.get("href")
-                     re_result = re.findall("\d{6}", tmp_info_link)
+                     re_result = re.findall("\d{5,6}", tmp_info_link)
                      if (len(re_result) > 0):
                          info_link = "https://warez-heaven.ws/" + str(re_result[0]) + "/"
         if(info_link != None):
@@ -80,9 +88,22 @@ def findLink(movie):
                             return (link[1], movie)
     return ( None, movie )
 
+def loadPlexMovies():
+    request_url = plex_url + "/library/sections/" + str(plex_library_id) + "/all?X-Plex-Token=" + plex_auth_token
+    resource = urllib.request.urlopen(request_url)
+    content = resource.read().decode(resource.headers.get_content_charset())
+    movie_list = []
+    root = xml.fromstring(content)
+    for child in root:
+        if(child.tag == "Video" and child.get("title") != None):
+            movie_list.append(child.get("title"))
+
+    print ("Found " + str(len(movie_list)) + " movies on Plex")
+    return movie_list
+
 def moviedbsearch(title):
     url = "https://api.themoviedb.org/3/search/tv"
-    payload = {'api_key': "<YOUR_API_KEY>", 'langauge': "de-DE", 'query': title}
+    payload = {'api_key': "<YOUR-API-KEY>", 'langauge': "de-DE", 'query': title}
     data = urllib.parse.urlencode(payload)
     data = data.encode('ascii')
     req = urllib.request.Request(url, data)
@@ -90,6 +111,7 @@ def moviedbsearch(title):
     print (res.read())
 
 def main():
+
     movies = []
     movies_found = []
     movies_missing = []
@@ -104,15 +126,27 @@ def main():
     parser.add_argument("-t", "--threads", help="how much threads should be used (default: 4)", default=4)
     args = parser.parse_args()
 
+
     if(not (os.path.isfile(args.file))):
         print("File '" + args.file + "' does not exits. Abort!" )
         return
 
+    plex_movies = []
+    if(plex_use):
+        plex_movies = loadPlexMovies()
+
+    skip_plex = 0
     for line in open(args.file, 'r', encoding="utf-8"):
         if(len(line.strip()) >= 4):
-            movies.append(line)
+            if (line.strip() in plex_movies):
+                skip_plex = skip_plex + 1
+                print(line.strip())
+            else:
+                movies.append(line.strip())
 
     print (str(len(movies)) + " movies in list")
+    if(plex_use):
+        print (str(skip_plex) + " movies skipped, they are already in Plex")
     print ("Using " + args.threads + " threads")
     if int(args.threads) > 8:
         print("Warning: more than 8 threads can lead to random crashes")
