@@ -1,14 +1,14 @@
 # py_moviecrawler
 Simple multithreaded python movie crawler
 
-Disclaimer: I'm not responsable for the use of this software. Check if downloading of movies is in accordance with the laws of your country!
+**Disclaimer:** I'm not responsable for the use of this software. Check if downloading of movies is in accordance with the laws of your country!
 
-Description:
+**Description:**
 Search for filecrypt links (ul, so) for movies from W-H. The best available releases are picked
 
-Usage: main.py [-h] [-o OUTPUT] [-m MISSING] [-t THREADS] file
+**Usage:** main.py [-h] [-o OUTPUT] [-m MISSING] [-t THREADS] file
 
-Example:
+**Examples:**
 
 python3 py_moviecrawler -o links.txt -i movies.txt -s --boerse-user BoerseUser --boerse-pw BoersePW
 
