@@ -1,6 +1,6 @@
 #Author: twoDarkMessiah (twoDarkMessiah@gmail.com)
-#Version: 0.4.0
-#Date: 2017-08-02 01:48
+#Version: 0.5.0
+#Date: 2017-08-02 06:00
 #License: GPL 3
 
 import urllib
@@ -12,6 +12,7 @@ from urllib import parse
 import os
 import lxml.html
 import xml.etree.ElementTree as xml
+import boerse
 
 #set allowed OCHs
 allowed_hoster = ["Uploaded.net", "Share-online.biz"]
@@ -19,9 +20,10 @@ allowed_hoster = ["Uploaded.net", "Share-online.biz"]
 #Your Plex Data
 #Finding Auth Token: https://support.plex.tv/hc/en-us/articles/204059436-Finding-an-authentication-token-X-Plex-Token
 plex_url = "http://plex.example.com:32401"
-plex_auth_token = "<YOUR-PLEX-TOKEN>"
-plex_library_id = 2 #Your Movie Library
+plex_auth_token = ""
+plex_library_id = 2
 plex_use = False #True, to compare movielist with plex
+
 
 def findAllMovies(page_number):
     results = []
@@ -65,7 +67,6 @@ def findAllMovies(page_number):
         print ("Error on Page:" + str(page_number))
     print (str(len(results)) + " results on page " + str(page_number))
     return results
-
 
 def findLink(movie):
     print("Searching for: " + movie.strip())
@@ -167,8 +168,12 @@ def main():
     parser.add_argument("-m", "--missing", help='file to save missing (failed) movies')
     parser.add_argument("-t", "--threads", help="how much threads should be used (default: 4)", default=4)
     parser.add_argument("-a", "--scrap-all", help="scrap all 1080p movies from W-H", dest="all", action='store_true')
+    parser.add_argument("-s", "--selenium", help="use selenium to results from boerse.to (experimental)", dest="boerse", action='store_true')
+    parser.add_argument("--boerse-user", help="username for boerse.to")
+    parser.add_argument("--boerse-pw", help="password for boerse.to")
 
     args = parser.parse_args()
+
 
 
     if(not args.all):
@@ -197,7 +202,31 @@ def main():
         print (str(len(movies)) + " movies in list")
         if(plex_use):
             print (str(skip_plex) + " movies skipped, they are already in Plex")
-        print ("Using " + args.threads + " threads")
+        if(args.boerse):
+            print("Multihreading for boerse.to currently not supported, maybe later ...")
+        else:
+            print ("Using " + args.threads + " threads")
+
+        if (args.boerse):
+            if (args.boerse_pw == None or args.boerse_user == None):
+                print("You have to specify user and pw for boerse.to, use --help")
+                return
+            if (args.all):
+                print("--scrap-all not compatible with boerse.to")
+                return
+            print("Using results from boerse.to")
+            print(
+                "Disclaimer: This is an experimental feature, it requires selenium (pip install selenium) and firefox")
+            links = boerse.searchOnBoerse(args.boerse_user, args.boerse_pw, movies, allowed_hoster)
+            if (len(links) > 0):
+                if (not (args.output == None)):
+                    print ("writing results to " + args.output)
+                    file_out = open(args.output, 'w')
+                    for link in links:
+                        file_out.write(link.strip() + "\n")
+                    file_out.close()
+            return
+
         if int(args.threads) > 8:
             print("Warning: more than 8 threads can lead to random crashes")
 
