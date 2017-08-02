@@ -9,7 +9,9 @@ Search for filecrypt links (ul, so) for movies from W-H. The best available rele
 Usage: main.py [-h] [-o OUTPUT] [-m MISSING] [-t THREADS] file
 
 Example:
+
 python3 py_moviecrawler -o links.txt -i movies.txt -s --boerse-user BoerseUser --boerse-pw BoersePW
+
 python3 py_moviecrawler -o links.txt --scrap-all -t 8
 
 _1line/movie in movies.txt_
