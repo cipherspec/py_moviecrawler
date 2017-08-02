@@ -11,6 +11,7 @@ Usage: main.py [-h] [-o OUTPUT] [-m MISSING] [-t THREADS] file
 ![Image](https://i.imgur.com/n0T4oXR.png)
 
 Changelog:
+
 0.1.0
 * Initial Release
 
